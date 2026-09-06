@@ -1,22 +1,20 @@
-# Inventory Management Guide
+# Inventory Management Guide - RasmiSupermarket
 
 ## Overview
 
-The RasmiSupermarket inventory management system provides comprehensive tools for tracking stock levels, recording movements, analyzing trends, and maintaining inventory accuracy.
+The Inventory Management module provides comprehensive stock tracking, movement recording, and inventory auditing capabilities.
 
-## Features
+## Key Features
 
-### 1. Stock Movement Recording
+### 1. Inventory Movement Recording
 
-Track all inventory movements with detailed logging:
-
-- **Inbound (In)**: Stock received from suppliers
-- **Outbound (Out)**: Stock sold to customers
+Track all stock movements with three types:
+- **In**: Stock received from suppliers
+- **Out**: Stock sold or used
 - **Adjustment**: Manual stock corrections
 
-#### Record Movement Endpoint
-
-```http
+#### API Endpoint
+```
 POST /api/inventory/movement
 Content-Type: application/json
 
@@ -24,12 +22,12 @@ Content-Type: application/json
   "productId": 1,
   "quantity": 50,
   "movementType": "In",
-  "reference": "PO-2026-001",
-  "notes": "Stock received from supplier ABC"
+  "reference": "PO-001",
+  "notes": "Purchase order from ABC Supplies"
 }
 ```
 
-**Response:**
+#### Response
 ```json
 {
   "success": true,
@@ -40,24 +38,25 @@ Content-Type: application/json
     "productName": "Milk 1L",
     "quantity": 50,
     "movementType": "In",
-    "reference": "PO-2026-001",
-    "notes": "Stock received from supplier ABC",
-    "movementDate": "2026-09-06T22:00:00Z",
+    "reference": "PO-001",
+    "notes": "Purchase order from ABC Supplies",
+    "movementDate": "2026-09-06T22:46:24Z",
     "createdBy": "user123",
-    "createdAt": "2026-09-06T22:00:00Z"
+    "createdAt": "2026-09-06T22:46:24Z"
   }
 }
 ```
 
 ### 2. Inventory History
 
-View complete movement history for any product:
+View complete movement history for any product.
 
-```http
+#### API Endpoint
+```
 GET /api/inventory/history/{productId}
 ```
 
-**Response:**
+#### Response
 ```json
 {
   "success": true,
@@ -69,10 +68,7 @@ GET /api/inventory/history/{productId}
       "productName": "Milk 1L",
       "quantity": 50,
       "movementType": "In",
-      "reference": "PO-2026-001",
-      "movementDate": "2026-09-06T22:00:00Z",
-      "createdBy": "warehouse",
-      "createdAt": "2026-09-06T22:00:00Z"
+      "movementDate": "2026-09-06T22:46:24Z"
     },
     {
       "id": 2,
@@ -80,29 +76,22 @@ GET /api/inventory/history/{productId}
       "productName": "Milk 1L",
       "quantity": 10,
       "movementType": "Out",
-      "reference": "ORD-2026-001",
-      "movementDate": "2026-09-06T23:00:00Z",
-      "createdBy": "cashier1",
-      "createdAt": "2026-09-06T23:00:00Z"
+      "movementDate": "2026-09-06T23:00:00Z"
     }
   ]
 }
 ```
 
-### 3. Inventory Status Reports
+### 3. Inventory Report
 
-#### Full Inventory Report
+Comprehensive stock status overview.
 
-```http
+#### API Endpoint
+```
 GET /api/inventory/report
 ```
 
-Shows status of all items:
-- Current stock levels
-- Reorder levels
-- Stock status (Critical, Low, Normal, Excess, Out of Stock)
-- Total inventory value
-
+#### Response
 ```json
 {
   "success": true,
@@ -122,33 +111,60 @@ Shows status of all items:
 }
 ```
 
-#### Low Stock Items
+#### Stock Status Values
+- **Out of Stock**: 0 units
+- **Critical**: ≤ 50% of reorder level
+- **Low**: ≤ reorder level
+- **Normal**: > reorder level and ≤ 3x reorder level
+- **Excess**: > 3x reorder level
 
-```http
+### 4. Low Stock Items
+
+Get all products below reorder level.
+
+#### API Endpoint
+```
 GET /api/inventory/low-stock
 ```
 
-Filters items with:
-- Stock ≤ Reorder Level: **Low**
-- Stock ≤ Reorder Level / 2: **Critical**
+### 5. Out of Stock Items
 
-#### Out of Stock Items
+Get all products with zero stock.
 
-```http
+#### API Endpoint
+```
 GET /api/inventory/out-of-stock
 ```
 
-Shows all items with zero quantity.
+### 6. Total Inventory Value
 
-### 4. Stock Movement Analysis
+Calculate total monetary value of all inventory.
 
-Analyze inventory movements over a period:
-
-```http
-POST /api/inventory/movement-analysis?startDate=2026-09-01&endDate=2026-09-30
+#### API Endpoint
+```
+GET /api/inventory/total-value
 ```
 
-**Response:**
+#### Response
+```json
+{
+  "success": true,
+  "message": "Inventory value calculated",
+  "data": 15000.50
+}
+```
+
+### 7. Stock Movement Analysis
+
+Analyze stock movements over a period.
+
+#### API Endpoint
+```
+POST /api/inventory/movement-analysis
+?startDate=2026-09-01&endDate=2026-09-30
+```
+
+#### Response
 ```json
 {
   "success": true,
@@ -157,9 +173,9 @@ POST /api/inventory/movement-analysis?startDate=2026-09-01&endDate=2026-09-30
     {
       "productId": 1,
       "productName": "Milk 1L",
-      "totalInbound": 200,
-      "totalOutbound": 150,
-      "netMovement": 50,
+      "totalInbound": 100,
+      "totalOutbound": 60,
+      "netMovement": 40,
       "periodStart": "2026-09-01T00:00:00Z",
       "periodEnd": "2026-09-30T23:59:59Z"
     }
@@ -167,34 +183,17 @@ POST /api/inventory/movement-analysis?startDate=2026-09-01&endDate=2026-09-30
 }
 ```
 
-### 5. Inventory Value
+### 8. Inventory Audit
 
-Calculate total inventory value:
+Perform physical inventory count and reconciliation.
 
-```http
-GET /api/inventory/total-value
+#### API Endpoint
+```
+POST /api/inventory/audit
+?productId=1&physicalCount=45&reason=Monthly+cycle+count
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Inventory value calculated",
-  "data": 5250.75
-}
-```
-
-Value = Sum of (Product Price × Current Stock Quantity)
-
-### 6. Inventory Audit
-
-Perform physical stock count and reconcile with system:
-
-```http
-POST /api/inventory/audit?productId=1&physicalCount=45&reason=Physical+count+completed
-```
-
-**Response:**
+#### Response
 ```json
 {
   "success": true,
@@ -205,150 +204,63 @@ POST /api/inventory/audit?productId=1&physicalCount=45&reason=Physical+count+com
     "systemStock": 40,
     "physicalCount": 45,
     "variance": 5,
-    "varianceReason": "Physical count completed",
+    "varianceReason": "Monthly cycle count",
     "isResolved": false,
-    "auditDate": "2026-09-06T22:30:00Z"
+    "auditDate": "2026-09-06T22:46:24Z"
   }
 }
 ```
 
-## Stock Status Definitions
-
-| Status | Condition | Action |
-|--------|-----------|--------|
-| **Out of Stock** | Quantity = 0 | Urgent reorder required |
-| **Critical** | Quantity ≤ Reorder Level / 2 | Immediate reorder |
-| **Low** | Quantity ≤ Reorder Level | Plan to reorder |
-| **Normal** | Reorder Level < Quantity ≤ Reorder Level × 3 | Monitor |
-| **Excess** | Quantity > Reorder Level × 3 | Consider reducing orders |
-
-## Use Cases
-
-### Scenario 1: Receiving Stock from Supplier
-
-1. Goods arrive from supplier
-2. Warehouse staff counts items
-3. Call movement endpoint:
-   ```bash
-   POST /api/inventory/movement
-   {
-     "productId": 5,
-     "quantity": 100,
-     "movementType": "In",
-     "reference": "PO-2026-0542",
-     "notes": "Delivery from ABC Suppliers"
-   }
-   ```
-4. Product stock automatically increases
-5. Movement is logged for audit trail
-
-### Scenario 2: Processing Customer Sale
-
-1. Customer purchases product
-2. System records order
-3. Call movement endpoint:
-   ```bash
-   POST /api/inventory/movement
-   {
-     "productId": 5,
-     "quantity": 2,
-     "movementType": "Out",
-     "reference": "ORD-2026-0142",
-     "notes": "Customer order"
-   }
-   ```
-4. Stock reduces automatically
-5. If stock becomes low, alert is triggered
-
-### Scenario 3: Inventory Discrepancy
-
-1. Manager performs physical count
-2. Count shows 48 items but system shows 50
-3. Call audit endpoint:
-   ```bash
-   POST /api/inventory/audit?productId=5&physicalCount=48&reason=Breakage+discovered
-   ```
-4. System records variance of -2
-5. Adjustment movement created automatically
-6. Stock is corrected to 48
-7. Variance reason is documented
-
-### Scenario 4: Monthly Analysis
-
-1. Manager wants to analyze September sales
-2. Call movement analysis:
-   ```bash
-   POST /api/inventory/movement-analysis?startDate=2026-09-01&endDate=2026-09-30
-   ```
-3. Receives breakdown of all inbound/outbound movements
-4. Identifies fast-moving vs slow-moving products
-
 ## Best Practices
 
-### 1. Regular Movement Recording
-- Record all movements immediately
-- Use meaningful references (PO numbers, Order numbers)
-- Include detailed notes for traceability
+### Recording Movements
+1. Always include descriptive references (PO number, Order ID, etc.)
+2. Add notes explaining the movement reason
+3. Record movements immediately to maintain accuracy
+4. Use the correct movement type for proper stock calculation
 
-### 2. Stock Reconciliation
-- Perform physical counts periodically (weekly/monthly)
-- Investigate variances promptly
-- Document reasons for discrepancies
+### Stock Management
+1. Regularly review low stock items
+2. Set appropriate reorder levels based on sales velocity
+3. Perform periodic physical counts (cycle counts)
+4. Investigate and resolve variances promptly
+5. Monitor inventory turnover rates
 
-### 3. Alert Management
-- Monitor low-stock alerts daily
-- Set appropriate reorder levels based on demand
-- Coordinate with procurement team for timely restocking
+### Audit Process
+1. Schedule regular cycle counts (daily, weekly, monthly)
+2. Record physical counts accurately
+3. Document variance reasons
+4. Create adjustment movements to resolve discrepancies
+5. Keep audit trail for compliance
 
-### 4. Analysis and Planning
-- Review movement analysis monthly
-- Identify seasonal trends
-- Plan inventory levels accordingly
+## Common Issues and Solutions
 
-### 5. Safety Stock
-- Maintain minimum stock levels for critical items
-- Account for supplier lead times
-- Factor in demand variability
+### Issue: Insufficient Stock Error
+**Cause**: Attempting to record more stock outbound than available
+**Solution**: Record an inbound movement first or check system vs. physical stock
 
-## Data Retention
+### Issue: Negative Stock
+**Cause**: Out movements without proper validation
+**Solution**: Use inventory audit to correct with adjustment movement
 
-All inventory movements are permanently stored for:
-- Audit trail
-- Historical analysis
-- Compliance reporting
-- Financial valuation
+### Issue: Large Variances
+**Cause**: System stock doesn't match physical count
+**Solution**: 
+1. Investigate root cause (theft, damage, data entry error)
+2. Review recent movements
+3. Perform detailed audit
+4. Record adjustment movement with documentation
 
-## Performance Tips
+## Reporting Features
 
-1. **Use Batch Operations**: Record multiple movements in sequence for efficiency
-2. **Archive Old Records**: For performance, consider archiving movements older than 2 years
-3. **Index Key Fields**: Database is optimized for common queries (productId, movementDate)
-4. **Cache Reports**: Dashboard summaries can be cached and refreshed hourly
-
-## Troubleshooting
-
-### Issue: Cannot record outbound movement
-**Cause**: Insufficient stock
-**Solution**: Check available quantity before processing sale. System prevents overselling.
-
-### Issue: Audit variance not matching
-**Cause**: Unrecorded movements since last count
-**Solution**: Check inventory history for recent movements. Record any missing adjustments.
-
-### Issue: Inventory value seems incorrect
-**Cause**: Outdated product prices
-**Solution**: Update product prices. Value is calculated using current prices.
-
-## API Error Codes
-
-| Code | Message | Resolution |
-|------|---------|------------|
-| 404 | Product not found | Verify product ID |
-| 400 | Invalid movement type | Use: In, Out, or Adjustment |
-| 400 | Insufficient stock | Check available quantity |
-| 500 | Database error | Contact support |
+The Inventory Management system integrates with reporting to provide:
+- Inventory valuation reports
+- Stock aging analysis
+- Movement trends
+- Reorder recommendations
+- ABC inventory classification
 
 ---
 
-**Inventory Module Version**: 1.0.0  
+**Version**: 1.0.0  
 **Last Updated**: 2026-09-06
