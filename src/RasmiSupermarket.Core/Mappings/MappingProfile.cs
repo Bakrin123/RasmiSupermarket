@@ -27,6 +27,8 @@ public class MappingProfile : Profile
 
         // User mappings
         CreateMap<User, UserDto>().ReverseMap();
-        CreateMap<User, CreateUserDto>().ForMember(dest => dest.Password, opt => opt.Ignore()).ReverseMap();
+        CreateMap<User, CreateUserDto>()
+            .ForMember(dest => dest.Password, opt => opt.Ignore())
+            .ReverseMap();
     }
 }
